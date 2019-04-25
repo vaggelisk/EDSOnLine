@@ -1,0 +1,37 @@
+import Vue from 'vue'
+import './plugins/vuetify'
+import App from './App.vue'
+import router from './router'
+
+Vue.config.productionTip = false
+
+import {data15min, data24h, ref24h} from "./data.js"
+
+export var globalStore = new Vue({
+  data: {
+    selectedVessel:'',
+    data15m:{},
+    data24h:{},
+    ref24h:{},
+    userLogged:false,
+    signals:{},
+    reference:{},
+    mapping:{},
+    units:{},
+    loadDiagram:{},
+    limits:{},
+    type:'last',
+    loggedIn: false,
+  },
+  created()
+  {
+    this.data15m = data15min;
+    this.data24h = data24h;
+    this.ref24h = ref24h;
+  }
+});
+
+new Vue({
+  render: h => h(App),
+  router
+}).$mount('#app')
