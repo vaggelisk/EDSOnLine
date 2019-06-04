@@ -1,7 +1,10 @@
 <template>
     <v-container fluid fill-height grid-list-md style="padding:0px;">
-        <v-layout column fill-height style="padding:0px;">            
-            <v-flex d-flex md1 style="align-items:center;justify-content:center;font-size:28px;">
+        <v-layout column fill-height style="padding:0px;">   
+            <v-flex v-if="trendData.value==-1000" d-flex md1 style="align-items:center;justify-content:center;font-size:28px;">
+                {{0.0.toFixed(trendData.format)}}
+            </v-flex>         
+            <v-flex v-else d-flex md1 style="align-items:center;justify-content:center;font-size:28px;">
                 {{trendData.value.toFixed(trendData.format)}}                   
             </v-flex>
             <v-flex d-flex md10>

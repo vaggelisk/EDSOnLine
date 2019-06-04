@@ -43,7 +43,8 @@
                                 v-bind:gaugeData="gaugeData"/>
                         </v-flex>
                         <v-flex d-flex md6>
-                            <FaultsWidget/>
+                            <FaultsWidget
+                                v-bind:navigation="true"/>
                         </v-flex>
                     </v-layout>
                 </v-flex>
@@ -163,51 +164,94 @@ export default {
                 });
 
             }
-                
+
             this.$set(this.vesselData,'route',[]);
-            
             let timeStamps = Object.keys(globalStore.signals);
 
             if (timeStamps.indexOf('average')>-1)
                 timeStamps.splice(timeStamps.indexOf('average'),1);
             
-            // let step = Math.round(timeStamps.length/10)
 
-            // let index=0;
+            
+            params=['ME_Power_perc','ensp','STW'];
 
-            // while (index<timeStamps.length)
-            // {
-            //     this.vesselData.route.push({
-            //         lat:globalStore.signals[timeStamps[index]]['LAT'],
-            //         lng:globalStore.signals[timeStamps[index]]['LON']
-            //     });
+            for (let i=0;i<timeStamps.length;i++) 
+            {
+                // let html ='<b>'+timeStamps[i]+' Energy Triumph</b><br>';
 
-            //     index = index+step;
-            // }
+                // for (let p=0;p<params.length;p++)
+                // {
+                //     if (globalStore.signals[timeStamps[i]][params[p]]!=-1000)
+                //         html += globalStore.mapping[params[p]]+': '+ globalStore.signals[timeStamps[i]][params[p]].toFixed(2)+' ['+globalStore.units[params[p]]+']<br>';
+                //     else  html += globalStore.mapping[params[p]]+': - ['+globalStore.units[params[p]]+']<br>';
+                // }
+                
+                // html +='Faults: 0<br>Tickets: -'
+                if ( globalStore.signals[timeStamps[i]]['LON']!=-1000)
+                {
+                    this.vesselData.route.push({
+                    // 'date':timeStamps[i],
+                        'coords':[ globalStore.signals[timeStamps[i]]['LON'], globalStore.signals[timeStamps[i]]['LAT']],
+                    // 'color':0,
+                        //'html':html,
+                    // 'status':'running'
+                    });
+
+                }
+                
+
+
+            }
 
             this.$set(this.vesselData,'points',[]);          
             
             if(globalStore.signals[last]['LAT']!=-1000)
             {
+                let html ='<b>'+last+' Energy Triumph</b><br>';
+
+                for (let p=0;p<params.length;p++)
+                {
+                    //if (globalStore.signals[timeStamps[i]][params[p]]!=-1000)
+                    html += globalStore.mapping[params[p]]+': '+ globalStore.signals[last][params[p]].toFixed(2)+' ['+globalStore.units[params[p]]+']<br>';
+                   // else  html += globalStore.mapping[params[p]]+': - ['+globalStore.units[params[p]]+']<br>';
+                }
+                
+                html +='Faults: 0<br>Tickets: -'
+
                 this.vesselData['points'].push({
-                    lat:globalStore.signals[last]['LAT'],
-                    lng:globalStore.signals[last]['LON'],
-                    tooltip:'Energy Triumph'
+                    'coords':[ globalStore.signals[last]['LON'], globalStore.signals[last]['LAT']],
+                    'html':html
                 });
             }
-            else
-            {
-                this.vesselData['points'].push({
-                    lat:globalStore.signals[timestamp]['LAT'],
-                    lng:globalStore.signals[timestamp]['LON'],
-                    tooltip:'Energy Triumph'
-                });
 
-            }
+            console.log(this.vesselData['points']);
+            // else
+            // {
+            //     this.vesselData['points'].push({
+            //         lat:globalStore.signals[timestamp]['LAT'],
+            //         lng:globalStore.signals[timestamp]['LON'],
+            //         tooltip:'Energy Triumph'
+            //     });
 
+            // }
+
+            // this.$set(this.vesselData,'route',[]);
+            
+            // let timeStamps = Object.keys(globalStore.signals);
+
+            // if (timeStamps.indexOf('average')>-1)
+            //     timeStamps.splice(timeStamps.indexOf('average'),1);
+            
+
+            // for (let i=0;i<timeStamps.length;i++)
+            // {
+            //     this.vesselData.route.push({
+            //         lat:globalStore.signals[timeStamps[i]]['LAT'],
+            //         lng:globalStore.signals[timeStamps[i]]['LON']
+            //     });
+            // }
             
             this.$set(this.vesselData,'showMap',true);
-            
 
             //KPIs
             
@@ -215,7 +259,11 @@ export default {
             let tcCount =1;
 
             this.$set(this.engineData, 'engineColor',globalStore.reference[timestamp]['eng_KPI_color']);
-            this.$set(this.engineData, 'engineKPI',globalStore.reference[timestamp]['eng_KPI']*100);
+
+            let kpi = globalStore.reference[timestamp]['eng_KPI']*100;
+
+            if (kpi.toFixed(1)!='100.0') this.$set(this.engineData, 'engineKPI',kpi.toFixed(1));
+            else this.$set(this.engineData, 'engineKPI',kpi.toFixed(0));
 
             this.engineData.cylinders=[];
 
@@ -332,6 +380,11 @@ export default {
                     color:color
                 }); 
             }
+
+            
+                
+            
+            
                         
         }
     },
@@ -342,7 +395,7 @@ export default {
         dataLoaded : function()
         {
             setTimeout(() => {
-                this.setData();}, 400); 
+                this.setData();}); 
         }
     }
 

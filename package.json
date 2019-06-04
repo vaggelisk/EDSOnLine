@@ -14,8 +14,12 @@
     "devextreme-vue": "^18.2.7",
     "highcharts": "^7.1.1",
     "highcharts-vue": "^1.2.0",
+    "html2canvas": "^1.0.0-rc.1",
+    "jspdf": "^1.5.3",
+    "mapbox-gl": "^1.0.0",
     "vue": "^2.6.6",
     "vue-baidu-map": "^0.21.19",
+    "vue-mapbox": "^0.4.1",
     "vue-router": "^3.0.2",
     "vue-yandex-maps": "^0.8.4",
     "vuetify": "^1.5.5"

@@ -1,5 +1,5 @@
 <template>
-  <v-container fluid fill-height grid-list-md style="padding:0px 10px 5px 10px;width:100%;height:100%;background-color:white;">
+  <v-container ref="pdfContent" fluid fill-height grid-list-md style="padding:0px 10px 5px 10px;width:100%;height:100%;background-color:white;">
     <v-layout row>
       <v-flex d-flex md6>
         <v-layout column fill-height>
@@ -24,21 +24,21 @@
           </v-flex>
           <v-flex d-flex md3 style="max-height:25%;">
             <BarChart
-              v-if="chartData['pcomp']"              
+              v-if="chartData['pcomp']"
               v-bind:active="active"
               v-bind:chartOptions="chartData['pcomp']"
               v-bind:title="titles['pcomp']"/>
           </v-flex>
           <v-flex d-flex md3 style="max-height:25%;">
             <BarChart
-              v-if="chartData['pmax']"              
+              v-if="chartData['pmax']"
               v-bind:active="active"
               v-bind:chartOptions="chartData['pmax']"
               v-bind:title="titles['pmax']"/>
           </v-flex>
           <v-flex d-flex md3 style="max-height:25%;">
-            <BarChart            
-              v-if="chartData['tExhC']"              
+            <BarChart
+              v-if="chartData['tExhC']"
               v-bind:active="active"
               v-bind:chartOptions="chartData['tExhC']"
               v-bind:title="titles['tExhC']"/>
@@ -100,10 +100,10 @@
                           v-bind:flat="false"/>
                     </v-flex>
                 </v-layout>
-              </v-flex>              
-              <v-flex d-flex md8 >               
+              </v-flex>
+              <v-flex d-flex md8 >
                 <LoadDiagram
-                  v-if="loadDiagram"  
+                    v-if="active"
                   v-bind:active="active"
                   v-bind:chartData="loadDiagram" />
               </v-flex>
@@ -137,14 +137,14 @@ export default {
   data () {
     return {
       cardData: {} ,
-      chartData:{}, 
+      chartData:{},
       titles:{},
       loadDiagram:{}
     }
   },
   mounted()
   {
-    this.setData();    
+    this.setData();
   },
   methods: {
     average: function(param, count, data, timestamp)
@@ -152,7 +152,7 @@ export default {
         let sum =0;
 
         for (let i=1;i<=count;i++)
-        {   
+        {
             if (data[timestamp][param+i]!=-1000) sum+=data[timestamp][param+i];
             else count--;
         }
@@ -172,20 +172,21 @@ export default {
       let params=['pcomp', 'pmax', 'pmaxPcomp','tcspeed', 'tscav','tTurbO','tTurbIn','pscav','soPresDispl','fRailPres'];
       let refs = ['pcomp', 'pmax','pmaxPcomp', 'tcspeed', 'tscav','tTurbO','tTurbIn','pscav','soPresSetpoint','fRailPresSet'];
       let elCount=[cylCount,cylCount,cylCount,  tcCount,0, tcCount,tcCount,0,0,0];
-      
+
       for (let p=0;p<params.length;p++)
       {
         let val, rfr;
 
         if (elCount[p]>0)
             val = this.average(params[p], elCount[p], globalStore.signals, timestamp);
-        else 
+        else
             val = globalStore.signals[timestamp][params[p]];
 
         if (params[p]=='fRailPres') rfr = globalStore.signals[timestamp][refs[p]];
+        else if (params[p]=='soPresDispl') rfr = -1000;
         else if (elCount[p]>0)
             rfr = this.average(refs[p], elCount[p], globalStore.reference, timestamp);
-        else 
+        else
             rfr = globalStore.reference[timestamp][refs[p]];
 
         let color =-10;
@@ -201,7 +202,7 @@ export default {
             if ((temp > minLimit) && (temp < maxLimit)) color=0;
             else color =20;
 
-          }          
+          }
         }
 
         this.$set(this.cardData,params[p],{
@@ -211,14 +212,14 @@ export default {
             unit:globalStore.units[params[p]],
             format:2,
             color:color
-        }); 
+        });
 
       }
 
 
       let aft = this.average('tlineraft', 6, globalStore.signals,timestamp);
       let fore = this.average('tlinerfore', 6, globalStore.signals,timestamp);
-      
+
       this.$set(this.cardData,'tliner',{
           value:(aft+fore)/2,
           ref: -1000,
@@ -226,30 +227,33 @@ export default {
           unit:'deg C',
           format:2,
           color:-10
-      }); 
-      
+      });
+
       let chartParams = ['pmax', 'pcomp', 'tExhC'];
       let chartRefs = ['pmax','pcomp','tExhC'];
-      
+
       for (let p=0;p<params.length;p++)
       {
         this.$set(this.chartData, chartParams[p], {
           chart:{
-            height:0,          
+            height:0,
             zoomType: 'xy'
           },
           legend:{
             enabled:false
           },
           tooltip:{
-            enabled:false
+            formatter: function () {
+                return 'Cylinder '+this.x+': '+this.point.y.toFixed(2);
+            }
           },
           xAxis:{
             title:
             {
               text:'Cylinders',
               align:'high'
-            }
+            },
+            crosshair:true
           },
           yAxis:{
             title:
@@ -261,7 +265,7 @@ export default {
           title:{
               text:undefined
           },
-          series: [{                        
+          series: [{
               type:'column',
               animation: false,
               data:[],
@@ -271,20 +275,20 @@ export default {
                 },
                 normal:{
                   animation:false
-                }, 
+                },
                 inactive:{
                   opacity: 1
                 }
               }
           }]
         })
-        
+
         for (let i=1;i<=cylCount;i++)
-        {     
+        {
           let color = 'rgb(51,82, 128)';
 
           let val= globalStore.signals[timestamp][chartParams[p]+i];
-          
+
             let rfr = globalStore.reference[timestamp][chartRefs[p]+i];
 
           if ((val!=-1000)&&(rfr!=-1000)&&(Object.keys(globalStore.limits).includes(chartParams[p])))
@@ -305,7 +309,7 @@ export default {
           });
 
           this.$set(this.titles,chartParams[p],globalStore.mapping[chartParams[p]]);
-            
+
         }
       }
 
@@ -323,10 +327,24 @@ export default {
               enabled:true
           },
           tooltip:{
-              enabled:false
+            formatter: function () {
+                return this.points.reduce(function (s, point) {
+                    return s + '<br/>' + point.series.name + ': ' + point.y.toFixed(0);
+                }, '<b>' + this.x + ' rpm</b>');
+            },
+            shared:true
           },
           title:{
               text:undefined
+          },
+          xAxis:
+          {
+            title:
+            {
+              text:'Engine speed [rpm]',
+              align:'high'
+            },
+            crosshair:true
           },
           yAxis:{
             title:
@@ -335,81 +353,81 @@ export default {
               align:'high'
             }
           },
-          series: [{  
-              name:'Measured',                      
+          series: [{
+              name:'Measured',
               type:'scatter',
               data:[],
-              animation: false,                        
+              animation: false,
               states: {
                   hover: {
                       enabled: false
                   },
                   normal:{
                   animation:false
-                  }, 
+                  },
                   inactive:{
                   opacity: 1
                   }
               }
           },
-          {     
-              name:'Reference',                   
+          {
+              name:'Reference',
               type:'scatter',
               data: [],
-              animation: false,                        
+              animation: false,
               states: {
                   hover: {
                       enabled: false
                   },
                   normal:{
                   animation:false
-                  }, 
+                  },
                   inactive:{
                   opacity: 1
                   }
               }
           },
-          {   
-              name:'Shop Tests',                     
+          {
+              name:'Shop Tests',
               type:'spline',
               data:[],
               animation: false,
               marker:{
                   enabled:false
-              },                        
+              },
               states: {
                   hover: {
                       enabled: false
                   },
                   normal:{
                   animation:false
-                  }, 
+                  },
                   inactive:{
                   opacity: 1
                   }
               }
           },
-          { 
-              name:'Sea Trials',                          
+          {
+              name:'Sea Trials',
               type:'line',
               data:[],
               animation: false,
               marker:{
                   enabled:false
-              },                        
+              },
               states: {
                   hover: {
                       enabled: false
                   },
                   normal:{
                   animation:false
-                  }, 
+                  },
                   inactive:{
                   opacity: 1
                   }
               }
           },
-          {                        
+          {
               name:'Engine Limit',
               type:'line',
               data: [] ,
@@ -423,7 +441,7 @@ export default {
                   },
                   normal:{
                   animation:false
-                  }, 
+                  },
                   inactive:{
                   opacity: 1
                   }
@@ -435,8 +453,8 @@ export default {
 
       let timestamp = temp[temp.length-1];
 
-      this.loadDiagram.series[0].data =[[globalStore.signals[timestamp]['ensp'],globalStore.signals[timestamp]['shaftP']]];      
-      this.loadDiagram.series[1].data =[[globalStore.signals[timestamp]['ensp'],globalStore.reference[timestamp]['shaftP']]]; 
+      this.loadDiagram.series[0].data =[[globalStore.signals[timestamp]['ensp'],globalStore.signals[timestamp]['shaftP']]];
+      this.loadDiagram.series[1].data =[[globalStore.signals[timestamp]['ensp'],globalStore.reference[timestamp]['shaftP']]];
 
       this.loadDiagram.series[2].data=[];
       for (let i=0;i<globalStore.loadDiagram.spVal1.length;i++)
@@ -445,6 +463,7 @@ export default {
       }
 
       this.loadDiagram.series[3].data=[];
+
       for (let i=0;i<globalStore.loadDiagram.stVal1.length;i++)
       {
          this.loadDiagram.series[3].data.push([globalStore.loadDiagram['stVal1'][i],globalStore.loadDiagram['stVal2'][i]])
@@ -478,9 +497,10 @@ export default {
       this.loadDiagram.series[4].data.push([ rpmMcr, mcr ]);
 
       this.loadDiagram.series[4].data.push([ rpm105, mcr ]);
+
       this.loadDiagram.series[4].data.push([ rpm105, 0 ]);
 
-            
+
     }
   },
   computed: {
@@ -490,7 +510,7 @@ export default {
     dataLoaded : function()
     {
       setTimeout(() => {
-          this.setData();}, 400); 
+          this.setData();});
     }
   }
 

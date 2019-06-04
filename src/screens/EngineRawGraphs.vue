@@ -25,7 +25,12 @@ More(Highcharts)
 export default {
     name: "EngineRawGraphs",
     components: {
-          highcharts: Chart 
+      highcharts: Chart 
+    },
+    props:
+    {
+      parameters1:Array,
+      parameters2:Array
     },
     data() {
       return {
@@ -41,20 +46,25 @@ export default {
             text: undefined
           },
           tooltip:{
-              enabled:false
+            formatter: function () {
+                return this.points.reduce(function (s, point) {
+                    return s + '<br/>' + point.series.name + ': ' + point.y.toFixed(2);
+                }, '<b>' + new Date(this.x).toTimeString().substring(0,5) + '</b>');
+            },
+            shared:true
           },
-          yAxis:{
-             title: {
-              text: '[kn]',
-              align:'high'}
-          },
+          yAxis: [],
           xAxis:{
             type:'datetime',
             title:
             {
               text:'Time',
               align:'high'
-            }
+            },
+            labels: {
+              format: '{value:%H:%M}'
+            },
+            crosshair:true
           },
           legend: {
             layout: 'horizontal',
@@ -76,17 +86,26 @@ export default {
             text: undefined
           },
           tooltip:{
-              enabled:false
+            formatter: function () {
+                return this.points.reduce(function (s, point) {
+                    return s + '<br/>' + point.series.name + ': ' + point.y.toFixed(2);
+                }, '<b>' + new Date(this.x).toTimeString().substring(0,5) + '</b>');
+            },
+            shared:true
           },
+          yAxis: [],
           xAxis:{
             type:'datetime',
             title:
             {
               text:'Time',
               align:'high'
-            }
+            },
+            labels: {
+              format: '{value:%H:%M}'
+            },
+            crosshair:true
           },
-          yAxis:[],
           legend: {
             layout: 'horizontal',
             align: 'center',
@@ -95,8 +114,6 @@ export default {
           },
           series: []
         },
-        parameters1:['SOG','STW','Wind_Speed'],
-        parameters2:['ME_Power_perc','ensp','Wind_direction_relative'],
         load: false   
       
       };
@@ -107,7 +124,7 @@ export default {
      // window.addEventListener('resize', this.onResize);
 
       setTimeout(() => {
-        this.setData();}, 400);   
+        this.setData();});   
     },
     methods: 
     {
@@ -122,7 +139,8 @@ export default {
         this.load=false;
 
         this.chartOptions1.series=[];
-        
+        this.chartOptions1.yAxis=[];
+
         this.chartOptions2.series=[];
         this.chartOptions2.yAxis=[];
 
@@ -133,13 +151,41 @@ export default {
 
         for (let p=0;p<this.parameters1.length;p++)
         {
+          let opp = false;
+
+          if (p%2==1) opp = true;
+
+          let yText='';
+
+          if (Object.keys(globalStore.mapping).includes(this.parameters1[p]))
+          {
+            yText=globalStore.mapping[this.parameters1[p].replace('1','')]+' ['+ globalStore.units[this.parameters1[p]]+']';
+          }
+          else
+          {
+            let param = this.parameters1[p].substring(0,this.parameters1[p].length-1);
+
+            yText= globalStore.mapping[param]+" "+this.parameters1[p].substring(this.parameters1[p].length-1)+' ['+globalStore.units[param]+']';
+          }
+
+          var axis={
+            title: {
+              text: yText,//globalStore.mapping[this.parameters1[p]]+' ['+globalStore.units[this.parameters1[p]]+']',
+              align:'high'
+            },
+            opposite:opp
+          };          
+
+          this.chartOptions1.yAxis.push(axis);
+
           var item={  
-              name:globalStore.mapping[this.parameters1[p]],                      
+              name:yText,                      
               type:'spline',
               data:[],
               marker:{
                   enabled:false
               },
+              yAxis:p,
               animation: false,                        
               states: {
                   hover: {
@@ -159,7 +205,7 @@ export default {
             let val = globalStore.signals[timeStamps[i]][this.parameters1[p]];
 
             if(val!=-1000)
-              item.data.push([timeStamps[i],val]); 
+              item.data.push([new Date(timeStamps[i]).getTime(),val]); 
           }       
 
           this.chartOptions1.series.push(item);
@@ -168,25 +214,35 @@ export default {
 
         for (let p=0;p<this.parameters2.length;p++)
         {
-          var axis={ 
-            labels: {
-              // style: {
-              //   color: Highcharts.getOptions().colors[p]
-              // }
-            },
+          let opp = false;
+
+          if (p%2==1) opp = true;
+          
+          let yText='';
+
+          if (Object.keys(globalStore.mapping).includes(this.parameters2[p]))
+          {
+            yText=globalStore.mapping[this.parameters2[p].replace('1','')]+' ['+ globalStore.units[this.parameters2[p]]+']';
+          }
+          else
+          {
+            let param = this.parameters2[p].substring(0,this.parameters2[p].length-1);
+
+            yText= globalStore.mapping[param]+" "+this.parameters2[p].substring(this.parameter2[p].length-1)+' ['+globalStore.units[param]+']';
+          }
+
+          var axis={
             title: {
-              text: globalStore.mapping[this.parameters2[p]]+' ['+globalStore.units[this.parameters2[p]]+']',
-              align:'high',
-              // style: {
-              //   color: Highcharts.getOptions().colors[p]
-              // }
+              text: yText,//globalStore.mapping[this.parameters1[p]]+' ['+globalStore.units[this.parameters1[p]]+']',
+              align:'high'
             },
-          };
+            opposite:opp
+          };          
 
           this.chartOptions2.yAxis.push(axis);
 
           var item={  
-              name:globalStore.mapping[this.parameters2[p]],                      
+              name:yText,                    
               type:'spline',
               data:[],
               marker:{
@@ -212,15 +268,12 @@ export default {
             let val = globalStore.signals[timeStamps[i]][this.parameters2[p]];
 
             if(val!=-1000)
-              item.data.push([timeStamps[i],val]); 
+              item.data.push([new Date(timeStamps[i]).getTime(),val]); 
           }       
 
           this.chartOptions2.series.push(item);
 
         }
-
-
-       // this.chartOptions.chart.height =this.$refs['chartContainer'].clientHeight;
         
         this.load=true;
       }
@@ -232,8 +285,18 @@ export default {
       dataLoaded : function()
       {
         setTimeout(() => {
-            this.setData();}, 400); 
-      }
+            this.setData();}); 
+      },
+      parameters1 : function()
+      {        
+          setTimeout(() => {
+              this.setData();}); 
+      },
+      parameters2 : function()
+      {        
+          setTimeout(() => {
+              this.setData();}); 
+      },
     }
 };
 </script>

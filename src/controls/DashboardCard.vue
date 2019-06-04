@@ -1,6 +1,6 @@
 <template>
-    <v-card flat  fill-height style="height:300px;margin:5px;" >
-        <v-card-title style="height:10%;cursor:pointer;"
+    <v-card flat fill-height style="height:320px;margin:5px;" >
+        <v-card-title v-if="cardData.engineState.nav" style="height:10%;cursor:pointer;"
                 v-on:click="navTo(cardData.name)" 
                 v-on:mouseleave="color='rgb(95,158,239)'"
                 v-on:mouseover ="color='rgb(51,82,128)'">
@@ -8,6 +8,15 @@
                 {{cardData.name}}
             </div>
             <v-icon :color="color">play_arrow</v-icon>
+            <v-spacer/>
+            <div style="font-size:15px;color:rgb(33,33,33);">
+                Last update: {{cardData.lastUpdate}}
+            </div>
+        </v-card-title>
+        <v-card-title v-else style="height:10%;color:rgb(51,82,128);">
+            <div primary class="title">
+                {{cardData.name}}
+            </div>
             <v-spacer/>
             <div style="font-size:15px;color:rgb(33,33,33);">
                 Last update: {{cardData.lastUpdate}}
@@ -32,7 +41,8 @@
                     <v-flex d-flex md3>
                         <v-layout column fill-height>                            
                             <v-flex md1 d-flex>
-                                <div v-if="cardData.engineColor==20" style="color:rgb(205, 57, 64);display:flex;align-items:center;justify-content:center;font-size:28px;">{{cardData.engineKPI}} %</div>
+                                <div v-if="cardData.engineKPI<0" style="color:rgb(117,117,117);display:flex;align-items:center;justify-content:center;font-size:28px;">-</div>
+                                <div v-else-if="cardData.engineColor==20" style="color:rgb(205, 57, 64);display:flex;align-items:center;justify-content:center;font-size:28px;">{{cardData.engineKPI}} %</div>
                                 <div v-else style="color:rgb(117,117,117);display:flex;align-items:center;justify-content:center;font-size:28px;" >{{cardData.engineKPI}} %</div>
                             </v-flex>                            
                             <v-flex md10 d-flex style="align-items:center;">        
@@ -45,8 +55,8 @@
                         </v-layout>
                     </v-flex>
                     <v-flex d-flex md3>
-                        <Trendline
-                            v-bind:trendData="cardData['bsfc']"/>
+                        <Trendline  v-on:dblclick.native="changeSFOC()"
+                            v-bind:trendData="cardData[param]"/>        
                     </v-flex>
                     <v-flex d-flex md3 >
                         <Trendline
@@ -75,17 +85,23 @@
             return {  
                 // titles:[//'Last update',
                 // 'Latitude','Longitude','Power','RPM','Speed','Engine State'] ,
-                keys:['LAT','LON','ME_Power_perc','ensp','STW','engineStateText'],
-                color:'rgb(95,158,239)'          
+                keys:['LAT','LON','ME_Power_perc','ensp','STW','engineState', 'version'],
+                color:'rgb(95,158,239)',
+                param:'bsfc'
             }
         },
         methods: {
             navTo(vesselName)
             {   
                 //this.color='rgb(95,158,239)';
-                this.$router.push( { path:  'vessel-view'} );
+                this.$router.push( { path:  'vessel-view'} );                
                 globalStore.selectedVessel = vesselName;
             },
+            changeSFOC()
+            {
+                if (this.param=='bsfc') this.param ='fcon';
+                else this.param = 'bsfc';
+            }
         },
         mounted() {
         }, 

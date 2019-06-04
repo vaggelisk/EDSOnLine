@@ -13,7 +13,7 @@
             :column-auto-width="true"
             :customizeColumns="customColumns"
             @cellPrepared="customCell">
-            <dx-paging :page-size="10"/>
+            <dx-paging :page-size="12"/>
             <!-- <dx-column v-for="field in signalFields"
                 :key="field"
                 :data-field="field"
@@ -21,7 +21,7 @@
                 format='#.##'
             /> -->
         </dx-data-grid>   
-        <div style="width:100%;height:48px;display:flex;justify-content:center;align-items:center;">
+        <!-- <div style="width:100%;height:48px;display:flex;justify-content:center;align-items:center;">
             <v-dialog v-model="dialog" width="600" height="800">
                 <template v-slot:activator="{ on }">
                     <v-btn flat style="color:white; background-color: rgb(51,82,128);"
@@ -64,7 +64,7 @@
                     </v-card-actions>
                 </v-card>
             </v-dialog>
-        </div>  
+        </div>   -->
 
     </v-layout>
    </v-container>
@@ -84,47 +84,27 @@ export default {
     DxPaging,
     DxScrolling
   },
+  props:
+  {
+   signalFields:Array   
+  },
   data() {
     return {
-        selected:['ensp','ME_Power_perc','ME_Power_kW','fcon','STW','SOG','soPresDispl','fRailPres','pscav','tscav','pcomp','pmax','tcspeed1','tTurbIn1','tTurbO1'],
-        signalFieldsForCancel: [],
+        // selected:['ensp','ME_Power_perc','ME_Power_kW','fcon','STW','SOG','soPresDispl','fRailPres','pscav','tscav','pcomp','pmax','tcspeed1','tTurbIn1','tTurbO1'],
+        // signalFieldsForCancel: [],
         signals:[],
-        columns:[],
         dialog: false,
-        signalFieldsOverall: [],
-        signalFields:  ['ensp','ME_Power_perc','ME_Power_kW','fcon','STW','SOG','soPresDispl','fRailPres','pscav','tscav','pcomp','pmax','tcspeed1','tTurbIn1','tTurbO1'],
+        // signalFieldsOverall: [],
+        //signalFields:  ['ensp','ME_Power_perc','ME_Power_kW','fcon','STW','SOG','soPresDispl','fRailPres','pscav','tscav','pcomp','pmax','tcspeed1','tTurbIn1','tTurbO1'],
         gridShow:false
    };
   },
  computed: {
-        dataLoaded: function () { return globalStore.type; },
-    },
+    dataLoaded: function () { return globalStore.type; },
+  },
   created()
   {
     this.setData();
-
-    let allSigs = Object.keys(globalStore.signals[Object.keys(globalStore.signals)[0]]);
-    for (let i=0;i<allSigs.length;i++)
-    {
-        if (Object.keys(globalStore.mapping).includes(allSigs[i]))
-        {
-            this.signalFieldsOverall.push({
-                param:allSigs[i],
-                title:globalStore.mapping[allSigs[i]]
-            });
-        }
-        else
-        {
-            let param = allSigs[i].substring(0,allSigs[i].length-1);
-
-            this.signalFieldsOverall.push({
-                param:allSigs[i],
-                title:globalStore.mapping[param]+" "+allSigs[i].substring(allSigs[i].length-1)
-            });
-        }
-        
-    }
-
   },
   mounted()
   {
@@ -132,39 +112,20 @@ export default {
   },
   methods:
   {
-      openDialog() {
-        //  console.log("o dialog anoixe");
-        this.signalFieldsForCancel = this.signalFields;
-        // console.log(this.signalFieldsForCancel);
-
-      },
-      theListChanged(a, b, c) {
-          this.signalFields.splice(a, 1, c);
-      },
-      selectText(item)
-      {
-          return globalStore.mapping[item.replace('1','')];
-      },
-      customColumns(columns)
-      {
+    customColumns(columns)
+    {
         for (let i=1;i<columns.length;i++)
         {
-            columns[i].caption=globalStore.mapping[this.signalFields[i-1].replace('1','')];
+            if (Object.keys(globalStore.mapping).includes(this.signalFields[i-1]))
+                columns[i].caption=globalStore.mapping[this.signalFields[i-1].replace('1','')];
+            else
+            {
+                let param = this.signalFields[i-1].substring(0,this.signalFields[i-1].length-1);
+
+                columns[i].caption= globalStore.mapping[param]+" "+this.signalFields[i-1].substring(this.signalFields[i-1].length-1);
+            }
         }
-      },
-      cancelDialog() {
-          this.dialog = false;
-          this.$set.signalFields(this.signalFieldsForCancel);
-      },
-
-      okDialog() {
-
-           setTimeout(() => {
-            this.setData();}, 400); 
-
-          this.dialog = false;
-      },
-
+    },
     setData()
     {
         this.gridShow = false;
@@ -198,12 +159,16 @@ export default {
   },
 
   watch: {
-      dataLoaded : function()
-      {
-          
+    dataLoaded : function()
+    {        
         setTimeout(() => {
-            this.setData();}, 400); 
-      }
+            this.setData();}); 
+    },
+    signalFields : function()
+    {        
+        setTimeout(() => {
+            this.setData();}); 
+    }
   }
 
 
@@ -215,7 +180,7 @@ export default {
 #rawTable{
   font-size: 16px;
   font-family:'Roboto', 'sans seriff';
-  height:calc(100%-48px) !important;
+  height:100% !important;
 }
 </style>
 <style>

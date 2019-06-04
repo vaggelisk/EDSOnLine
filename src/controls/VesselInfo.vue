@@ -30,9 +30,10 @@
                                 :labelStyle="{color: 'white', fontSize : '14px', border: 'rgb(51,82,128)', background: 'rgb(51,82,128)', padding:'5px'}"/>
                         </baidu-map> -->
                         <Map 
+                            v-if="vesselData['route']"
                             v-bind:points="vesselData['points']"
                             v-bind:route="vesselData['route']"
-                            v-bind:zoom="6"/>
+                            v-bind:zoom="4"/>
                     </v-flex>                   
                 </v-layout>
             </v-container>

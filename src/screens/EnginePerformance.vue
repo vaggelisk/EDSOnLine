@@ -15,6 +15,10 @@
       <EngineRaw
         v-bind:active="tabActive[2]"/>
     </v-tab-item>
+    <v-tab-item class="tabItem">
+      <OperationalGraphs
+        v-bind:active="tabActive[3]"/>
+    </v-tab-item>
   </v-tabs>
 </template>
 
@@ -22,6 +26,7 @@
   import EngineGraphs         from "./EngineGraphs"
   import EngineParameters  from "./EngineParameters"
   import EngineRaw      from "./EngineRaw"
+  import OperationalGraphs         from "./OperationalGraphs"
   
   import {globalStore} from "../main.js"
 
@@ -30,16 +35,17 @@
     components: {
       EngineParameters,
       EngineRaw,
-      EngineGraphs
+      EngineGraphs,
+      OperationalGraphs
     },
 
     data () {
       return {
         active: parseInt( this.$route.query.tab ),
         tabTitles: [
-          'Performance Parameters','Performance Graphs', 'Raw Data'
+          'Performance Parameters','Performance Graphs', 'Raw Data', 'Operational Graphs'
         ],
-        tabActive:[false, false, false]
+        tabActive:[false, false, false, false]
       }
     },
     created() {     

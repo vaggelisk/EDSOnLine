@@ -160,7 +160,11 @@ export default {
             {
               text:'Time',
               align:'high'
-            }
+            }, 
+            labels: {
+              format: '{value:%H:%M}'
+            },
+            crosshair:true
           },
           yAxis:{
             title:
@@ -170,7 +174,19 @@ export default {
             }
           },
           tooltip:{
-            enabled:false
+            formatter: function () {
+                return this.points.reduce(function (s, point) {
+                  if (point.series.type=='line')
+                  {
+                    return s + '<br/>' + point.series.name + ': ' + point.y.toFixed(2);
+                  } 
+                  else 
+                  {
+                    return s + '<br/>' + point.series.name + ': ' + point.point.low.toFixed(2) + ' - ' + point.point.high.toFixed(2);
+                  }
+                }, '<b>' + new Date(this.x).toTimeString().substring(0,5) + '</b>');
+            },
+            shared:true
           },
           legend:{
             enabled:false
@@ -179,8 +195,9 @@ export default {
               text:undefined
           },
           series: [{  
-              name:'',                      
-              type:'scatter',
+              name:'Value',                      
+              type:'line',
+              color:'transparent',
               animation: false,
               data:[],
               marker:
@@ -200,7 +217,7 @@ export default {
               }
           },
           {             
-              name:'',
+              name:'Acceptable Range',
               type:'arearange',            
               animation: false,                      
               data:[],
@@ -300,16 +317,17 @@ export default {
             height:100,
             zoomType: 'xy'
           },
-          tooltip: {
-            enabled:false
-          },
           xAxis:{
             type:'datetime',
+            labels: {
+              format: '{value:%H:%M}'
+            },
             title:
             {
               text:'Time',
               align:'high'
-            }
+            },
+            crosshair:true
           },
           yAxis:{
             title:
@@ -319,7 +337,19 @@ export default {
             }
           },
           tooltip:{
-            enabled:false
+            formatter: function () {
+                return this.points.reduce(function (s, point) {
+                  if (point.series.type=='line')
+                  {
+                    return s + '<br/>' + point.series.name + ': ' + point.y.toFixed(2);
+                  } 
+                  else 
+                  {
+                    return s + '<br/>' + point.series.name + ': ' + point.point.low.toFixed(2) + ' - ' + point.point.high.toFixed(2);
+                  }
+                }, '<b>' + new Date(this.x).toTimeString().substring(0,5) + '</b>');
+            },
+            shared:true
           },
           legend:{
             enabled:false
@@ -328,8 +358,9 @@ export default {
               text:undefined
           },
           series: [{  
-              name:'',                        
-              type:'scatter',
+              name:'Difference %',                      
+              type:'line',
+              color:'transparent',
               animation: false,
               data:[],
               marker:
@@ -349,7 +380,7 @@ export default {
               }
           },
           {
-              name:'',  
+              name:'Acceptable Range',
               type:'arearange',            
               animation: false,                      
               data:[],
@@ -435,7 +466,7 @@ export default {
     dataLoaded : function()
     {
       setTimeout(() => {
-        this.setData();}, 400); 
+        this.setData();}); 
     }
   }
 }
